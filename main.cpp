@@ -12,6 +12,31 @@ struct Color {
     Color(float red, float green, float blue, float alpha = 1.0f)
         : r(red), g(green), b(blue), a(alpha) {}
 };
+vector<Color> getCellColors() {
+        // Define the color constants
+    const Color darkGrey = {26.0f / 255.0f, 31.0f / 255.0f, 40.0f / 255.0f, 1.0f};
+    const Color green = {47.0f / 255.0f, 230.0f / 255.0f, 23.0f / 255.0f, 1.0f};
+    const Color red = {232.0f / 255.0f, 18.0f / 255.0f, 18.0f / 255.0f, 1.0f};
+    const Color orange = {226.0f / 255.0f, 116.0f / 255.0f, 17.0f / 255.0f, 1.0f};
+    const Color yellow = {237.0f / 255.0f, 234.0f / 255.0f, 4.0f / 255.0f, 1.0f};
+    const Color purple = {166.0f / 255.0f, 0.0f / 255.0f, 247.0f / 255.0f, 1.0f};
+    const Color cyan = {21.0f / 255.0f, 204.0f / 255.0f, 209.0f / 255.0f, 1.0f};
+    const Color blue = {13.0f / 255.0f, 64.0f / 255.0f, 216.0f / 255.0f, 1.0f};
+    const Color lightBlue = {59.0f / 255.0f, 85.0f / 255.0f, 162.0f / 255.0f, 1.0f};
+    const Color darkBlue = {44.0f / 255.0f, 44.0f / 255.0f, 127.0f / 255.0f, 1.0f};
+
+    return {darkGrey, green, red, orange, yellow, purple, cyan, blue, lightBlue, darkBlue};
+}
+void plotRectangle( ll posX, ll posY, ll width, ll height, const Color& colorObj  ) {
+    glColor4f(colorObj.r, colorObj.g, colorObj.b, colorObj.a);
+    glBegin(GL_QUADS);
+    glVertex2f(posX, posY);
+    glVertex2f(posX + width, posY);
+    glVertex2f(posX + width, posY + height);
+    glVertex2f(posX, posY + height);
+    glEnd();
+    return ;
+}
 /// Grid Setup
 class Grid
 {
@@ -44,21 +69,6 @@ public:
             cout << endl;
         }
     }
-    vector<Color> getCellColors() {
-        // Define the color constants
-        const Color darkGrey = {26.0f / 255.0f, 31.0f / 255.0f, 40.0f / 255.0f, 1.0f};
-        const Color green = {47.0f / 255.0f, 230.0f / 255.0f, 23.0f / 255.0f, 1.0f};
-        const Color red = {232.0f / 255.0f, 18.0f / 255.0f, 18.0f / 255.0f, 1.0f};
-        const Color orange = {226.0f / 255.0f, 116.0f / 255.0f, 17.0f / 255.0f, 1.0f};
-        const Color yellow = {237.0f / 255.0f, 234.0f / 255.0f, 4.0f / 255.0f, 1.0f};
-        const Color purple = {166.0f / 255.0f, 0.0f / 255.0f, 247.0f / 255.0f, 1.0f};
-        const Color cyan = {21.0f / 255.0f, 204.0f / 255.0f, 209.0f / 255.0f, 1.0f};
-        const Color blue = {13.0f / 255.0f, 64.0f / 255.0f, 216.0f / 255.0f, 1.0f};
-        const Color lightBlue = {59.0f / 255.0f, 85.0f / 255.0f, 162.0f / 255.0f, 1.0f};
-        const Color darkBlue = {44.0f / 255.0f, 44.0f / 255.0f, 127.0f / 255.0f, 1.0f};
-
-        return {darkGrey, green, red, orange, yellow, purple, cyan, blue, lightBlue, darkBlue};
-    }
     void draw() {
         // plotting the grid
         for( ll row = 0; row < numRows; row += 1 ) {
@@ -70,17 +80,254 @@ public:
         }
 
     }
-    void plotRectangle( ll posX, ll posY, ll width, ll height, const Color& colorObj  ) {
-        glColor4f(colorObj.r, colorObj.g, colorObj.b, colorObj.a);
-        glBegin(GL_QUADS);
-        glVertex2f(posX, posY);
-        glVertex2f(posX + width, posY);
-        glVertex2f(posX + width, posY + height);
-        glVertex2f(posX, posY + height);
-        glEnd();
-        return ;
+};
+/// Position Class
+class Position
+{
+public:
+    ll row, col;
+    Position( ll row, ll col )
+    {
+        this -> row = row;
+        this -> col = col;
     }
+};
+/// Block Class
+class Block
+{
+private:
+    ll cellsize, rotationState;
+    vector<Color>colors;
+public:
+    ll id; // to identify each block uniquely
+    map<ll, vector<Position>>cells; /// key -> rotation state(0,1,2,3), then respective position in the grid
+    Block()
+    {
+        cellsize = 30;
+        rotationState = 0;
+        colors = getCellColors();
+    }
+    void draw() {
+        vector<Position> tiles = cells[rotationState];
+        for( Position item : tiles ) {
+            plotRectangle( item.col * cellsize + 11, item.row * cellsize + 11, cellsize -1 , cellsize - 1 , colors[id] );
+        }
+    }
+};
+/// Creating L Block
+class LBlock:public Block
+{
+public:
+    LBlock() {
+        id = 1;
+        /**
+            ..#
+            ###
+            ...
+        **/
+        cells[0] = { Position(0,2), Position(1,0), Position(1,1), Position(1,2)};
+        /**
+            .#.
+            .#.
+            .##
+        **/
+        cells[1] = { Position(0,1), Position(1,1), Position(2,1), Position(2,2)};
+        /**
+            ...
+            ###
+            #..
+        **/
+        cells[2] = { Position(1,0), Position(1,1), Position(1,2), Position(2,0)};
+        /**
+            ##.
+            .#.
+            .#.
+        **/
+        cells[3] = { Position(0,0), Position(0,1), Position(1,1), Position(2,1)};
 
+    }
+};
+class JBlock : public Block
+{
+public:
+    JBlock()
+    {
+        id = 2;
+        /**
+            #..
+            ###
+            ...
+        **/
+        cells[0] = {Position(0, 0), Position(1, 0), Position(1, 1), Position(1, 2)};
+        /**
+            .##
+            .#.
+            .#.
+        **/
+        cells[1] = {Position(0, 1), Position(0, 2), Position(1, 1), Position(2, 1)};
+        /**
+            ...
+            ###
+            ..#
+        **/
+        cells[2] = {Position(1, 0), Position(1, 1), Position(1, 2), Position(2, 2)};
+        /**
+            .#.
+            .#.
+            ##.
+        **/
+        cells[3] = {Position(0, 1), Position(1, 1), Position(2, 0), Position(2, 1)};
+    }
+};
+
+class IBlock : public Block
+{
+public:
+    IBlock()
+    {
+        id = 3;
+        /**
+            ....
+            ####
+            ....
+            ....
+        **/
+        cells[0] = {Position(1, 0), Position(1, 1), Position(1, 2), Position(1, 3)};
+        /**
+            ..#.
+            ..#.
+            ..#.
+            ..#.
+        **/
+        cells[1] = {Position(0, 2), Position(1, 2), Position(2, 2), Position(3, 2)};
+        /**
+            ....
+            ....
+            ####
+            ....
+        **/
+        cells[2] = {Position(2, 0), Position(2, 1), Position(2, 2), Position(2, 3)};
+        /**
+            .#..
+            .#..
+            .#..
+            .#..
+        **/
+        cells[3] = {Position(0, 1), Position(1, 1), Position(2, 1), Position(3, 1)};
+    }
+};
+
+class OBlock : public Block
+{
+public:
+    OBlock()
+    {
+        /**
+            ##
+            ##
+        **/
+        id = 4;
+        cells[0] = {Position(0, 0), Position(0, 1), Position(1, 0), Position(1, 1)};
+    }
+};
+
+class SBlock : public Block
+{
+public:
+    SBlock()
+    {
+        id = 5;
+        /**
+            .##
+            ##.
+            ...
+        **/
+        cells[0] = {Position(0, 1), Position(0, 2), Position(1, 0), Position(1, 1)};
+        /**
+            .#.
+            .##
+            ..#
+        **/
+        cells[1] = {Position(0, 1), Position(1, 1), Position(1, 2), Position(2, 2)};
+        /**
+            ...
+            .##
+            ##.
+        **/
+        cells[2] = {Position(1, 1), Position(1, 2), Position(2, 0), Position(2, 1)};
+        /**
+            #..
+            ##.
+            .#.
+        **/
+        cells[3] = {Position(0, 0), Position(1, 0), Position(1, 1), Position(2, 1)};
+    }
+};
+
+class TBlock : public Block
+{
+public:
+    TBlock()
+    {
+        id = 6;
+        /**
+            .#.
+            ###
+            ...
+        **/
+        cells[0] = {Position(0, 1), Position(1, 0), Position(1, 1), Position(1, 2)};
+        /**
+            .#.
+            .##
+            .#.
+        **/
+        cells[1] = {Position(0, 1), Position(1, 1), Position(1, 2), Position(2, 1)};
+        /**
+            ...
+            ###
+            .#.
+        **/
+        cells[2] = {Position(1, 0), Position(1, 1), Position(1, 2), Position(2, 1)};
+        /**
+            .#.
+            ##.
+            .#.
+        **/
+        cells[3] = {Position(0, 1), Position(1, 0), Position(1, 1), Position(2, 1)};
+    }
+};
+
+class ZBlock : public Block
+{
+public:
+    ZBlock()
+    {
+        id = 7;
+        /**
+            ##.
+            .##
+            ...
+        **/
+        cells[0] = {Position(0, 0), Position(0, 1), Position(1, 1), Position(1, 2)};
+        /**
+            ..#
+            .##
+            .#.
+        **/
+        cells[1] = {Position(0, 2), Position(1, 1), Position(1, 2), Position(2, 1)};
+        /**
+            ...
+            ##.
+            .##
+        **/
+        cells[2] = {Position(1, 0), Position(1, 1), Position(2, 1), Position(2, 2)};
+        /**
+            .#.
+            ##.
+            #..
+        **/
+        cells[3] = {Position(0, 1), Position(1, 0), Position(1, 1), Position(2, 0)};
+    }
 };
 void display(void)
 {
@@ -89,11 +336,10 @@ void display(void)
     glClearColor(0.172, 0.172, 0.498, 1.0);
 
     Grid grid = Grid();
-    grid.grid[0][0] = 1;
-    grid.grid[3][5] = 4;
-    grid.grid[17][8] = 7;
     grid.print();
     grid.draw();
+    TBlock blk = TBlock();
+    blk.draw();
     glutSwapBuffers();
     return ;
 }
@@ -104,15 +350,17 @@ void myInit (void)
 	glClearColor(0.172f, 0.172f, 0.498f, 1.0f);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0.0, 800.0, 0.0, 600.0);
+	gluOrtho2D(0.0, 500.0, 620.0, 0.0);
+	glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 	return ;
 }
 int main(int argc, char ** argv)
 {
 	glutInit( & argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE| GLUT_RGB);
-	glutInitWindowSize(800, 600);
-	glutInitWindowPosition(100, 100);
+	glutInitWindowSize(500, 620);
+	glutInitWindowPosition(500, 100);
 	glutCreateWindow("Tetris Game by Ruhul Amin Sharif");
 	myInit ();
 	glutDisplayFunc(display);
