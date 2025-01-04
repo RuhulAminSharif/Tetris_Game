@@ -98,6 +98,7 @@ class Block
 private:
     ll cellsize, rotationState;
     vector<Color>colors;
+    ll rowOffset, colOffset; /// to move the blocks
 public:
     ll id; // to identify each block uniquely
     map<ll, vector<Position>>cells; /// key -> rotation state(0,1,2,3), then respective position in the grid
@@ -106,12 +107,27 @@ public:
         cellsize = 30;
         rotationState = 0;
         colors = getCellColors();
+        rowOffset = 0;
+        colOffset = 0;
     }
     void draw() {
-        vector<Position> tiles = cells[rotationState];
+        vector<Position> tiles = getCellPositions();
         for( Position item : tiles ) {
             plotRectangle( item.col * cellsize + 11, item.row * cellsize + 11, cellsize -1 , cellsize - 1 , colors[id] );
         }
+    }
+    void move(ll rows, ll cols ) {
+        rowOffset += rows;
+        colOffset +=  cols;
+    }
+    vector<Position> getCellPositions() {
+        vector<Position> tiles = cells[rotationState];
+        vector<Position> movedTiles;
+        for( Position item : tiles ) {
+            Position newPos = Position(item.row+rowOffset,item.col+colOffset);
+            movedTiles.push_back(newPos);
+        }
+        return movedTiles;
     }
 };
 /// Creating L Block
@@ -144,9 +160,10 @@ public:
             .#.
         **/
         cells[3] = { Position(0,0), Position(0,1), Position(1,1), Position(2,1)};
-
+        move(0,3);
     }
 };
+/// Creating the J Block
 class JBlock : public Block
 {
 public:
@@ -177,6 +194,7 @@ public:
             ##.
         **/
         cells[3] = {Position(0, 1), Position(1, 1), Position(2, 0), Position(2, 1)};
+        move(0,3);
     }
 };
 
@@ -214,6 +232,7 @@ public:
             .#..
         **/
         cells[3] = {Position(0, 1), Position(1, 1), Position(2, 1), Position(3, 1)};
+        move(-1,3);
     }
 };
 
@@ -228,6 +247,7 @@ public:
         **/
         id = 4;
         cells[0] = {Position(0, 0), Position(0, 1), Position(1, 0), Position(1, 1)};
+        move(0,4);
     }
 };
 
@@ -261,6 +281,7 @@ public:
             .#.
         **/
         cells[3] = {Position(0, 0), Position(1, 0), Position(1, 1), Position(2, 1)};
+        move(0,3);
     }
 };
 
@@ -294,6 +315,7 @@ public:
             .#.
         **/
         cells[3] = {Position(0, 1), Position(1, 0), Position(1, 1), Position(2, 1)};
+        move(0,3);
     }
 };
 
@@ -327,6 +349,7 @@ public:
             #..
         **/
         cells[3] = {Position(0, 1), Position(1, 0), Position(1, 1), Position(2, 0)};
+        move(0,3);
     }
 };
 void display(void)
@@ -338,7 +361,7 @@ void display(void)
     Grid grid = Grid();
     grid.print();
     grid.draw();
-    TBlock blk = TBlock();
+    IBlock blk = IBlock();
     blk.draw();
     glutSwapBuffers();
     return ;
