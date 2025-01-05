@@ -405,6 +405,21 @@ public:
                 break;
         }
     }
+    void handleSpecialInput(int key, int x, int y) {
+        switch (key) {
+            case GLUT_KEY_LEFT:
+                moveBlockLeft();
+                break;
+            case GLUT_KEY_RIGHT:
+                moveBlockRight();
+                break;
+            case GLUT_KEY_DOWN:
+                moveBlockDown();
+                break;
+            default:
+                break;
+        }
+    }
     bool isBlockOutside() {
         vector<Position> tiles = currBlock.getCellPositions();
         for (Position item : tiles) {
@@ -452,6 +467,10 @@ void handleInput(unsigned char key, int x, int y) {
     myGame.handleInput(key, x, y);
     glutPostRedisplay(); // Request display update
 }
+void handleSpecialInput(int key, int x, int y) {
+    myGame.handleSpecialInput(key, x, y);
+    glutPostRedisplay();
+}
 void myInit (void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
@@ -473,6 +492,7 @@ int main(int argc, char ** argv)
 	myInit ();
 	glutDisplayFunc(display);
 	glutKeyboardFunc(handleInput);
+	glutSpecialFunc(handleSpecialInput);
     glutMainLoop();
     return 0;
 }
