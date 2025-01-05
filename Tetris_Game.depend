@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1736087829 source:e:\onedrive\premier university\7th\cgip_project\tetris_game\main.cpp
+1736089252 source:e:\onedrive\premier university\7th\cgip_project\tetris_game\main.cpp
 	<bits/stdc++.h>
 	<GL/gl.h>
 	<GL/glut.h>

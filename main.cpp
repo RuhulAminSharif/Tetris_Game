@@ -464,7 +464,7 @@ public:
     void rotateBlock() {
         currBlock.rotate();
         if( isBlockOutside() ) {
-           // currBlock.undoRotation();
+            currBlock.undoRotation();
         }
     }
 };
