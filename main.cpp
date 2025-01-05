@@ -134,6 +134,15 @@ public:
         }
         return movedTiles;
     }
+    void rotate() {
+        rotationState = (rotationState + 1) % cells.size();
+    }
+    void undoRotation() {
+        rotationState -= 1;
+        if( rotationState <= 0 ) {
+            rotationState =  cells.size() - 1;
+        }
+    }
 };
 /// Creating L Block
 class LBlock:public Block
@@ -399,7 +408,7 @@ public:
                 moveBlockDown();
                 break;
             case 'w': // 'w' for rotate
-                //rotateBlock();
+                rotateBlock();
                 break;
             default:
                 break;
@@ -415,6 +424,9 @@ public:
                 break;
             case GLUT_KEY_DOWN:
                 moveBlockDown();
+                break;
+            case GLUT_KEY_UP:
+                rotateBlock();
                 break;
             default:
                 break;
@@ -447,6 +459,12 @@ public:
         currBlock.move(1, 0);
         if( isBlockOutside() ) {
             currBlock.move(-1, 0);
+        }
+    }
+    void rotateBlock() {
+        currBlock.rotate();
+        if( isBlockOutside() ) {
+           // currBlock.undoRotation();
         }
     }
 };
