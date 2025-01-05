@@ -78,7 +78,12 @@ public:
                 plotRectangle(  col * cellSize+11, row * cellSize+11, cellSize-1, cellSize-1, colors[val] );
             }
         }
-
+    }
+    bool isCellOutside(ll row, ll column) {
+        if( row >= 0 && row < numRows && column >= 0 && column < numCols) {
+            return false;
+        }
+        return true;
     }
 };
 /// Position Class
@@ -378,25 +383,75 @@ public:
     vector<Block> getAllBlocks() {
         return {IBlock(), JBlock(), LBlock(), OBlock(), SBlock(), TBlock(), ZBlock()};
     }
-    void draw()
-    {
+    void draw() {
         grid.draw();
         currBlock.draw();
     }
+    void handleInput(unsigned char key, ll x, ll y) {
+        switch (key) {
+            case 'l': // 'a' for left
+                moveBlockLeft();
+                break;
+            case 'r': // 'd' for right
+                moveBlockRight();
+                break;
+            case 'd': // 's' for down
+                moveBlockDown();
+                break;
+            case 'w': // 'w' for rotate
+                //rotateBlock();
+                break;
+            default:
+                break;
+        }
+    }
+    bool isBlockOutside() {
+        vector<Position> tiles = currBlock.getCellPositions();
+        for (Position item : tiles) {
+            if ( grid.isCellOutside( item.row, item.col ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+    void moveBlockLeft()
+    {
+        currBlock.move(0,-1);
+        if( isBlockOutside() ) {
+            currBlock.move(0, 1);
+        }
+    }
+    void moveBlockRight() {
+        currBlock.move(0, 1);
+        if( isBlockOutside() ) {
+            currBlock.move(0, -1);
+        }
+    }
+
+    void moveBlockDown() {
+        currBlock.move(1, 0);
+        if( isBlockOutside() ) {
+            currBlock.move(-1, 0);
+        }
+    }
 };
+Game myGame = Game();
 void display(void)
 {
     /// Setting up Background color
     glClear(GL_COLOR_BUFFER_BIT );
     glClearColor(0.172, 0.172, 0.498, 1.0);
 
-    Game myGame = Game();
+
     myGame.draw();
 
     glutSwapBuffers();
     return ;
 }
-
+void handleInput(unsigned char key, int x, int y) {
+    myGame.handleInput(key, x, y);
+    glutPostRedisplay(); // Request display update
+}
 void myInit (void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
@@ -417,6 +472,7 @@ int main(int argc, char ** argv)
 	glutCreateWindow("Tetris Game by Ruhul Amin Sharif");
 	myInit ();
 	glutDisplayFunc(display);
+	glutKeyboardFunc(handleInput);
     glutMainLoop();
     return 0;
 }
