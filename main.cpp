@@ -352,17 +352,47 @@ public:
         move(0,3);
     }
 };
+class Game
+{
+private:
+    vector<Block> blocks;
+    Block currBlock, nextBlock;
+public:
+    Grid grid;
+    Game()
+    {
+        grid = Grid();
+        blocks = getAllBlocks();
+        currBlock = getRandomBlock();
+        nextBlock = getRandomBlock();
+    }
+    Block getRandomBlock() {
+        if( blocks.empty() ) {
+            blocks = getAllBlocks();
+        }
+        ll randomIndex = rand() % blocks.size();
+        Block block = blocks[randomIndex];
+        blocks.erase(blocks.begin() + randomIndex);
+        return block;
+    }
+    vector<Block> getAllBlocks() {
+        return {IBlock(), JBlock(), LBlock(), OBlock(), SBlock(), TBlock(), ZBlock()};
+    }
+    void draw()
+    {
+        grid.draw();
+        currBlock.draw();
+    }
+};
 void display(void)
 {
     /// Setting up Background color
     glClear(GL_COLOR_BUFFER_BIT );
     glClearColor(0.172, 0.172, 0.498, 1.0);
 
-    Grid grid = Grid();
-    grid.print();
-    grid.draw();
-    IBlock blk = IBlock();
-    blk.draw();
+    Game myGame = Game();
+    myGame.draw();
+
     glutSwapBuffers();
     return ;
 }
