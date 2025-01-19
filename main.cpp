@@ -138,10 +138,7 @@ public:
         rotationState = (rotationState + 1) % cells.size();
     }
     void undoRotation() {
-        rotationState -= 1;
-        if( rotationState <= 0 ) {
-            rotationState =  cells.size() - 1;
-        }
+        rotationState = (rotationState - 1 + cells.size()) % cells.size();
     }
 };
 /// Creating L Block
@@ -398,13 +395,13 @@ public:
     }
     void handleInput(unsigned char key, ll x, ll y) {
         switch (key) {
-            case 'l': // 'a' for left
+            case 'l': // 'l' for left
                 moveBlockLeft();
                 break;
-            case 'r': // 'd' for right
+            case 'r': // 'r' for right
                 moveBlockRight();
                 break;
-            case 'd': // 's' for down
+            case 'd': // 'd' for down
                 moveBlockDown();
                 break;
             case 'w': // 'w' for rotate
@@ -454,12 +451,20 @@ public:
             currBlock.move(0, -1);
         }
     }
-
     void moveBlockDown() {
         currBlock.move(1, 0);
         if( isBlockOutside() ) {
             currBlock.move(-1, 0);
+            lockBlock();
         }
+    }
+    void lockBlock() {
+        vector<Position> tiles = currBlock.getCellPositions();
+        for (Position item : tiles) {
+            grid.grid[item.row][item.col] = currBlock.id;
+        }
+        currBlock = nextBlock;
+        nextBlock = getRandomBlock();
     }
     void rotateBlock() {
         currBlock.rotate();
@@ -489,6 +494,11 @@ void handleSpecialInput(int key, int x, int y) {
     myGame.handleSpecialInput(key, x, y);
     glutPostRedisplay();
 }
+void update(int value) {
+    myGame.moveBlockDown();       // Move the current block down
+    glutPostRedisplay();          // Redraw the scene
+    glutTimerFunc(500, update, 0); // Call update again after 500 milliseconds (0.5 seconds)
+}
 void myInit (void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
@@ -511,6 +521,8 @@ int main(int argc, char ** argv)
 	glutDisplayFunc(display);
 	glutKeyboardFunc(handleInput);
 	glutSpecialFunc(handleSpecialInput);
+	// Start the timer function
+    glutTimerFunc(500, update, 0);
     glutMainLoop();
     return 0;
 }
