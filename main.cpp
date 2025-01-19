@@ -88,6 +88,37 @@ public:
     bool isCellEmpty(ll row, ll column) {
         return grid[row][column] == 0;
     }
+    ll clearFullRows( ) {
+        ll tot = 0;
+        for( ll row = numRows - 1; row >= 0; row -= 1 ) {
+            if( isRowFull( row) ) {
+                tot += 1;
+            }
+            else if( tot > 0 ) {
+                moveRowDown( row, tot );
+            }
+        }
+        return tot;
+    }
+    bool isRowFull( ll row ) {
+        for( ll col = 0; col < numCols; col += 1 ) {
+            if( grid[row][col] == 0 ) {
+                return false;
+            }
+        }
+        return true;
+    }
+    void clearRow( ll row ) {
+        for( ll col = 0; col < numCols; col += 1 ) {
+            grid[row][col] = 0;
+        }
+    }
+    void moveRowDown( ll whichRow, ll howManyRows ) {
+        for( ll col = 0; col < numCols; col += 1 ) {
+            grid[whichRow+howManyRows][col] = grid[whichRow][col];
+            grid[whichRow][col] = 0;
+        }
+    }
 };
 /// Position Class
 class Position
@@ -468,6 +499,7 @@ public:
         }
         currBlock = nextBlock;
         nextBlock = getRandomBlock();
+        grid.clearFullRows();
     }
     void rotateBlock() {
         currBlock.rotate();
