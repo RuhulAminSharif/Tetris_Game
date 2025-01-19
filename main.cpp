@@ -4,6 +4,7 @@ using namespace std;
 #include <GL/glut.h>
 #define ll long long int
 #define ld long double
+#define PI acos(-1)
 // Define the Color structure
 struct Color {
     float r, g, b, a;
@@ -36,6 +37,51 @@ void plotRectangle( ll posX, ll posY, ll width, ll height, const Color& colorObj
     glVertex2f(posX, posY + height);
     glEnd();
     return ;
+}
+// Function to draw a filled circle segment (quarter-circle)
+void DrawCircleSegment(float cx, float cy, float radius, int startAngle, int endAngle, int numSegments, const Color& colorObj ) {
+    glColor4f(colorObj.r, colorObj.g, colorObj.b, colorObj.a);
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(cx, cy); // Center of the circle
+    for (int i = startAngle; i <= endAngle; ++i) {
+        float angle = i * PI / 180.0f;
+        glVertex2f(cx + cos(angle) * radius, cy + sin(angle) * radius);
+    }
+    glEnd();
+}
+
+// Function to draw a rounded rectangle
+void DrawRectangleRounded(float x, float y, float width, float height, float roundness, int segments, const Color& colorObj) {
+    float radius = roundness * fmin(width, height) / 2.0f;
+
+    // Draw the main rectangle body (without the corners)
+    glColor4f(colorObj.r, colorObj.g, colorObj.b, colorObj.a);
+    glBegin(GL_QUADS);
+    glVertex2f(x + radius, y); // Bottom-left
+    glVertex2f(x + width - radius, y); // Bottom-right
+    glVertex2f(x + width - radius, y + height); // Top-right
+    glVertex2f(x + radius, y + height); // Top-left
+    glEnd();
+
+    // Draw the left and right side rectangles
+    glBegin(GL_QUADS);
+    // Left side
+    glVertex2f(x, y + radius);
+    glVertex2f(x + radius, y + radius);
+    glVertex2f(x + radius, y + height - radius);
+    glVertex2f(x, y + height - radius);
+    // Right side
+    glVertex2f(x + width - radius, y + radius);
+    glVertex2f(x + width, y + radius);
+    glVertex2f(x + width, y + height - radius);
+    glVertex2f(x + width - radius, y + height - radius);
+    glEnd();
+
+    // Draw the corner circles (quarter-circle segments)
+    DrawCircleSegment(x + radius, y + radius, radius, 180, 270, segments, colorObj); // Bottom-left
+    DrawCircleSegment(x + width - radius, y + radius, radius, 270, 360, segments, colorObj); // Bottom-right
+    DrawCircleSegment(x + width - radius, y + height - radius, radius, 0, 90, segments, colorObj); // Top-right
+    DrawCircleSegment(x + radius, y + height - radius, radius, 90, 180, segments, colorObj); // Top-left
 }
 /// Grid Setup
 class Grid
@@ -149,10 +195,10 @@ public:
         rowOffset = 0;
         colOffset = 0;
     }
-    void draw() {
+    void draw(ll offSetX, ll offSetY ) {
         vector<Position> tiles = getCellPositions();
         for( Position item : tiles ) {
-            plotRectangle( item.col * cellsize + 11, item.row * cellsize + 11, cellsize -1 , cellsize - 1 , colors[id] );
+            plotRectangle( item.col * cellsize + offSetX, item.row * cellsize + offSetY, cellsize -1 , cellsize - 1 , colors[id] );
         }
     }
     void move(ll rows, ll cols ) {
@@ -405,6 +451,7 @@ private:
 public:
     Grid grid;
     bool gameOver;
+    ll score;
     Game()
     {
         grid = Grid();
@@ -412,14 +459,30 @@ public:
         currBlock = getRandomBlock();
         nextBlock = getRandomBlock();
         gameOver = false;
+        score = 0;
     }
     void reset() {
-        grid = Grid();
+        grid = Grid(); /// need to change later ---
         blocks = getAllBlocks();
         currBlock = getRandomBlock();
         nextBlock = getRandomBlock();
         gameOver = false;
-        grid.print();
+        score = 0;
+    }
+    void updateScore( ll lines, ll moveDownPoints ) {
+        if( lines == 1 ) {
+            score += 100;
+        }
+        else if( lines == 2 ) {
+            score += 300;
+        }
+        else if( lines == 3 ) {
+            score += 600;
+        }
+        else if( lines >= 4 ) {
+            score += ( lines * 250 );
+        }
+        score += moveDownPoints;
     }
     Block getRandomBlock() {
         if( blocks.empty() ) {
@@ -435,7 +498,8 @@ public:
     }
     void draw() {
         grid.draw();
-        currBlock.draw();
+        currBlock.draw(11, 11);
+        nextBlock.draw(270, 270);
     }
     void handleInput(unsigned char key, ll x, ll y) {
         if ( gameOver ) {
@@ -453,6 +517,7 @@ public:
                     break;
                 case 'd': // 'd' for down
                     moveBlockDown();
+                    updateScore(0,1);
                     break;
                 case 'w': // 'w' for rotate
                     rotateBlock();
@@ -472,6 +537,7 @@ public:
                 break;
             case GLUT_KEY_DOWN:
                 moveBlockDown();
+                updateScore(0,1);
                 break;
             case GLUT_KEY_UP:
                 rotateBlock();
@@ -525,7 +591,8 @@ public:
             gameOver = true;
         }
         nextBlock = getRandomBlock();
-        grid.clearFullRows();
+        ll lines = grid.clearFullRows();
+        updateScore( lines, 0 );
     }
     void rotateBlock() {
         if( gameOver == false ) {
@@ -546,13 +613,56 @@ public:
     }
 };
 Game myGame = Game();
+// Function to render text
+void renderBitmapString(float x, float y, void* font, const string& text) {
+    glRasterPos2f(x, y);
+    for (char c : text) {
+        glutBitmapCharacter(font, c);
+    }
+}
+// Function to draw text
+void drawText(const std::string& text, float x, float y, void* font, float color[3]) {
+    glColor3f(color[0], color[1], color[2]); // Set text color
+
+    glRasterPos2f(x, y); // Position text
+    for (char c : text) {
+        glutBitmapCharacter(font, c);
+    }
+}
 void display(void)
 {
     /// Setting up Background color
     glClear(GL_COLOR_BUFFER_BIT );
     glClearColor(0.172, 0.172, 0.498, 1.0);
 
+    // Set text color to white
+    glColor3f(1.0, 1.0, 1.0);
 
+    // Render text at specific locations
+    renderBitmapString(365.0f, 25.0f, GLUT_BITMAP_HELVETICA_18, "Score");
+    renderBitmapString(370.0f, 175.0f, GLUT_BITMAP_HELVETICA_18, "Next");
+    if( myGame.gameOver) {
+        renderBitmapString(320.0f, 450.0f, GLUT_BITMAP_HELVETICA_18, "GAME OVER");
+    }
+    Color lightBlue(59.0f / 255.0f, 85.0f / 255.0f, 162.0f / 255.0f, 1.0f);
+    DrawRectangleRounded(320.0f, 55.0f, 170.0f, 60.0f, 0.3f, 6, lightBlue ); // lightBlue color
+
+    // Convert score to string
+    string scoreText = to_string( myGame.score );
+    ll width = 0;
+    for (char c : scoreText) {
+        width += glutBitmapWidth(GLUT_BITMAP_HELVETICA_18, c);
+    }
+
+    // Calculate the position for centering
+    float x = 320 + (170 - width) / 2.0f; // Adjust based on your rectangle size
+    float y = 90;                             // Fixed y-position
+
+    // Draw text
+    float textColor[3] = {1.0f, 1.0f, 1.0f}; // White color
+    drawText(scoreText, x, y, GLUT_BITMAP_HELVETICA_18, textColor);
+
+    DrawRectangleRounded(320.0f, 215.0f, 170.0f, 180.0f, 0.3f, 6, lightBlue ); // lightBlue color
     myGame.draw();
 
     glutSwapBuffers();
