@@ -404,12 +404,22 @@ private:
     Block currBlock, nextBlock;
 public:
     Grid grid;
+    bool gameOver;
     Game()
     {
         grid = Grid();
         blocks = getAllBlocks();
         currBlock = getRandomBlock();
         nextBlock = getRandomBlock();
+        gameOver = false;
+    }
+    void reset() {
+        grid = Grid();
+        blocks = getAllBlocks();
+        currBlock = getRandomBlock();
+        nextBlock = getRandomBlock();
+        gameOver = false;
+        grid.print();
     }
     Block getRandomBlock() {
         if( blocks.empty() ) {
@@ -428,21 +438,28 @@ public:
         currBlock.draw();
     }
     void handleInput(unsigned char key, ll x, ll y) {
-        switch (key) {
-            case 'l': // 'l' for left
-                moveBlockLeft();
-                break;
-            case 'r': // 'r' for right
-                moveBlockRight();
-                break;
-            case 'd': // 'd' for down
-                moveBlockDown();
-                break;
-            case 'w': // 'w' for rotate
-                rotateBlock();
-                break;
-            default:
-                break;
+        if ( gameOver ) {
+            if (key == 'n') { // 'n' for new game
+                reset(); // Call the reset method
+            }
+        }
+        else {
+            switch (key) {
+                case 'l': // 'l' for left
+                    moveBlockLeft();
+                    break;
+                case 'r': // 'r' for right
+                    moveBlockRight();
+                    break;
+                case 'd': // 'd' for down
+                    moveBlockDown();
+                    break;
+                case 'w': // 'w' for rotate
+                    rotateBlock();
+                    break;
+                default:
+                    break;
+            }
         }
     }
     void handleSpecialInput(int key, int x, int y) {
@@ -474,22 +491,28 @@ public:
     }
     void moveBlockLeft()
     {
-        currBlock.move(0,-1);
-        if( isBlockOutside() || isBlockFits() == false ) {
-            currBlock.move(0, 1);
+        if( gameOver == false ) {
+            currBlock.move(0,-1);
+            if( isBlockOutside() || isBlockFits() == false ) {
+                currBlock.move(0, 1);
+            }
         }
     }
     void moveBlockRight() {
-        currBlock.move(0, 1);
-        if( isBlockOutside() || isBlockFits() == false ) {
-            currBlock.move(0, -1);
+        if( gameOver == false ) {
+            currBlock.move(0, 1);
+            if( isBlockOutside() || isBlockFits() == false ) {
+                currBlock.move(0, -1);
+            }
         }
     }
     void moveBlockDown() {
-        currBlock.move(1, 0);
-        if( isBlockOutside() || isBlockFits() == false ) {
-            currBlock.move(-1, 0);
-            lockBlock();
+        if( gameOver == false ) {
+            currBlock.move(1, 0);
+            if( isBlockOutside() || isBlockFits() == false ) {
+                currBlock.move(-1, 0);
+                lockBlock();
+            }
         }
     }
     void lockBlock() {
@@ -498,13 +521,18 @@ public:
             grid.grid[item.row][item.col] = currBlock.id;
         }
         currBlock = nextBlock;
+        if( isBlockFits() == false ) {
+            gameOver = true;
+        }
         nextBlock = getRandomBlock();
         grid.clearFullRows();
     }
     void rotateBlock() {
-        currBlock.rotate();
-        if( isBlockOutside() || isBlockFits() == false ) {
-            currBlock.undoRotation();
+        if( gameOver == false ) {
+            currBlock.rotate();
+            if( isBlockOutside() || isBlockFits() == false ) {
+                currBlock.undoRotation();
+            }
         }
     }
     bool isBlockFits() {
@@ -539,9 +567,10 @@ void handleSpecialInput(int key, int x, int y) {
     glutPostRedisplay();
 }
 void update(int value) {
-    myGame.moveBlockDown();       // Move the current block down
-    glutPostRedisplay();          // Redraw the scene
-    glutTimerFunc(200, update, 0); // Call update again after 500 milliseconds (0.5 seconds)
+
+    myGame.moveBlockDown(); // Move the current block down
+    glutPostRedisplay(); // Redraw the scene
+    glutTimerFunc(500, update, 0); // Call update again after 500 milliseconds (0.5 seconds)
 }
 void myInit (void)
 {
