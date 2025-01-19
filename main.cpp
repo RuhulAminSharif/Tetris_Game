@@ -85,6 +85,9 @@ public:
         }
         return true;
     }
+    bool isCellEmpty(ll row, ll column) {
+        return grid[row][column] == 0;
+    }
 };
 /// Position Class
 class Position
@@ -441,19 +444,19 @@ public:
     void moveBlockLeft()
     {
         currBlock.move(0,-1);
-        if( isBlockOutside() ) {
+        if( isBlockOutside() || isBlockFits() == false ) {
             currBlock.move(0, 1);
         }
     }
     void moveBlockRight() {
         currBlock.move(0, 1);
-        if( isBlockOutside() ) {
+        if( isBlockOutside() || isBlockFits() == false ) {
             currBlock.move(0, -1);
         }
     }
     void moveBlockDown() {
         currBlock.move(1, 0);
-        if( isBlockOutside() ) {
+        if( isBlockOutside() || isBlockFits() == false ) {
             currBlock.move(-1, 0);
             lockBlock();
         }
@@ -468,9 +471,18 @@ public:
     }
     void rotateBlock() {
         currBlock.rotate();
-        if( isBlockOutside() ) {
+        if( isBlockOutside() || isBlockFits() == false ) {
             currBlock.undoRotation();
         }
+    }
+    bool isBlockFits() {
+        vector<Position> tiles = currBlock.getCellPositions();
+        for (Position item : tiles) {
+            if( grid.isCellEmpty(item.row, item.col) == false ) {
+                return false;
+            }
+        }
+        return true;
     }
 };
 Game myGame = Game();
@@ -497,7 +509,7 @@ void handleSpecialInput(int key, int x, int y) {
 void update(int value) {
     myGame.moveBlockDown();       // Move the current block down
     glutPostRedisplay();          // Redraw the scene
-    glutTimerFunc(500, update, 0); // Call update again after 500 milliseconds (0.5 seconds)
+    glutTimerFunc(200, update, 0); // Call update again after 500 milliseconds (0.5 seconds)
 }
 void myInit (void)
 {
