@@ -499,7 +499,16 @@ public:
     void draw() {
         grid.draw();
         currBlock.draw(11, 11);
-        nextBlock.draw(270, 270);
+        if( nextBlock.id == 3 ) {
+            nextBlock.draw(255, 290);
+        }
+        else if( nextBlock.id == 4 ) {
+            nextBlock.draw(255, 280);
+        }
+        else {
+            nextBlock.draw(270, 270);
+        }
+
     }
     void handleInput(unsigned char key, ll x, ll y) {
         if ( gameOver ) {
