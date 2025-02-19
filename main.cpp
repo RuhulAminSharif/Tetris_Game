@@ -26,7 +26,7 @@ vector<Color> getCellColors() {
     const Color lightBlue = {59.0f / 255.0f, 85.0f / 255.0f, 162.0f / 255.0f, 1.0f};
     const Color darkBlue = {44.0f / 255.0f, 44.0f / 255.0f, 127.0f / 255.0f, 1.0f};
 
-    return {darkGrey, green, red, orange, yellow, purple, cyan, blue, lightBlue, darkBlue};
+    return {darkGrey, green, red, orange, yellow, purple, cyan, blue, cyan, darkBlue, purple, green, red };
 }
 void plotRectangle( ll posX, ll posY, ll width, ll height, const Color& colorObj  ) {
     glColor4f(colorObj.r, colorObj.g, colorObj.b, colorObj.a);
@@ -443,15 +443,108 @@ public:
         move(0,3);
     }
 };
+class ComplexBlock1 : public Block {
+public:
+    ComplexBlock1() {
+        id = 8; // unique ID for ComplexBlock1
+        /**
+            .#.
+            ###
+            .#.
+        **/
+        cells[0] = cells[1] = cells[2] = cells[3] = {Position(0, 1), Position(1, 0), Position(1, 1), Position(1, 2), Position(2, 1)};
+        move(0, 3);
+    }
+};
+class ComplexBlock2 : public Block {
+public:
+    ComplexBlock2() {
+        id = 9; // unique ID for ComplexBlock2
+        /**
+            .##.
+            .##.
+            ####
+            ....
+        **/
+        cells[0] = {Position(0, 1), Position(0, 2), Position(1, 1), Position(1, 2), Position(2, 0), Position(2, 1), Position(2, 2), Position(2, 3)};
+        /**
+            ...#
+            .###
+            .###
+            ...#
+        **/
+        cells[1] = {Position(0, 3),Position(1, 1),Position(1, 2), Position(1, 3),Position(2, 1),Position(2, 2), Position(2, 3), Position(3,3)};
+        /**
+            ####
+            .##.
+            .##.
+            ....
+        **/
+        cells[2] = {Position(0, 0),Position(0, 1),Position(0, 2), Position(0, 3),Position(1, 1),Position(1, 2), Position(2, 1), Position(2,2)};
+        /**
+            #...
+            ###.
+            ###.
+            #...
+        **/
+        cells[3] = {Position(0, 0),Position(1, 0),Position(1, 1), Position(1, 2),Position(2, 0),Position(2, 1), Position(2, 2), Position(3,0)};
+
+        move(0, 3);
+    }
+};
+class ComplexBlock3 : public Block {
+public:
+    ComplexBlock3() {
+        id = 10; // unique ID for ComplexBlock3
+        /**
+            ..##.
+            #####
+            ..##.
+            .....
+        **/
+        cells[0] = {Position(0, 2), Position(0, 3), Position(1, 0), Position(1, 1), Position(1, 2), Position(1, 3), Position(1, 4), Position(2, 2), Position(2, 3)};
+        /**
+            ..#.
+            .###.
+            .###.
+            ..#..
+            ..#..
+        **/
+        cells[1] = {Position(0, 2), Position(1,1), Position(1, 2), Position(1, 3), Position(2, 1), Position(2, 2), Position(2, 3), Position(3, 3), Position(4, 3)};
+        /**
+            .##..
+            #####
+            .##..
+            .....
+        **/
+        cells[2] = {Position(0, 1), Position(0, 2), Position(1, 0), Position(1, 1), Position(1, 2), Position(1, 3), Position(1, 4), Position(2, 1), Position(2, 2)};
+        /**
+            ..#.
+            ..#.
+            .###.
+            .###.
+            ..#..
+        **/
+        cells[3] = {Position(0, 2), Position(1, 2), Position(2,1), Position(2, 2), Position(2, 3), Position(3, 1), Position(3, 2), Position(3, 3), Position(4, 3)};
+        move(0, 3);
+    }
+};
 class Game
 {
 private:
     vector<Block> blocks;
+    vector<Block> complexBlocks;
     Block currBlock, nextBlock;
 public:
     Grid grid;
     bool gameOver;
     ll score;
+    ll level;
+    ll scoreForNextLevel;
+    ll timerInterval;
+    ll windowID;
+    bool levelUpMsg;
+    ll nextComplexBlockIndex;
     Game()
     {
         grid = Grid();
@@ -460,6 +553,26 @@ public:
         nextBlock = getRandomBlock();
         gameOver = false;
         score = 0;
+        level = 1;
+        scoreForNextLevel = 500;
+        timerInterval = 500;
+        levelUpMsg = false;
+        complexBlocks = {ComplexBlock1(), ComplexBlock2(), ComplexBlock3()};
+        nextComplexBlockIndex = 0;
+    }
+    void increaseLevel() {
+        level += 1;
+        scoreForNextLevel += 500;
+        timerInterval = max( 100LL, timerInterval - 100 );
+        grid = Grid();
+        if( nextComplexBlockIndex < complexBlocks.size()) {
+            nextComplexBlockIndex++;
+            blocks.push_back(complexBlocks[nextComplexBlockIndex-1]);
+        }
+        currBlock = getRandomBlock();
+        nextBlock = getRandomBlock();
+        gameOver = false;
+        levelUpMsg = true;
     }
     void reset() {
         grid = Grid(); /// need to change later ---
@@ -468,6 +581,11 @@ public:
         nextBlock = getRandomBlock();
         gameOver = false;
         score = 0;
+        level = 1;
+        scoreForNextLevel = 1000;
+        timerInterval = 500;
+        levelUpMsg = false;
+        nextComplexBlockIndex = 0;
     }
     void updateScore( ll lines, ll moveDownPoints ) {
         if( lines == 1 ) {
@@ -483,10 +601,19 @@ public:
             score += ( lines * 250 );
         }
         score += moveDownPoints;
+        if (score >= scoreForNextLevel) {
+            increaseLevel();
+        }
     }
     Block getRandomBlock() {
         if( blocks.empty() ) {
-            blocks = getAllBlocks();
+            for( ll i = 1; i <= nextComplexBlockIndex; i += 1 ) {
+                blocks.push_back(complexBlocks[i-1]);
+            }
+            vector<Block> temp = getAllBlocks();
+            for( auto blk : temp ) {
+                blocks.push_back(blk);
+            }
         }
         ll randomIndex = rand() % blocks.size();
         Block block = blocks[randomIndex];
@@ -629,6 +756,17 @@ void renderBitmapString(float x, float y, void* font, const string& text) {
         glutBitmapCharacter(font, c);
     }
 }
+void myInit (void)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+	glClearColor(0.172f, 0.172f, 0.498f, 1.0f);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0.0, 500.0, 620.0, 0.0);
+	glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+	return ;
+}
 // Function to draw text
 void drawText(const std::string& text, float x, float y, void* font, float color[3]) {
     glColor3f(color[0], color[1], color[2]); // Set text color
@@ -637,6 +775,25 @@ void drawText(const std::string& text, float x, float y, void* font, float color
     for (char c : text) {
         glutBitmapCharacter(font, c);
     }
+}
+void update(int value) {
+
+    myGame.moveBlockDown(); // Move the current block down
+    glutPostRedisplay(); // Redraw the scene
+    glutTimerFunc(myGame.timerInterval, update, 0); // Call update again after 500 milliseconds (0.5 seconds)
+}
+
+void handleInput(unsigned char key, int x, int y) {
+    myGame.handleInput(key, x, y);
+    glutPostRedisplay(); // Request display update
+}
+void handleSpecialInput(int key, int x, int y) {
+    myGame.handleSpecialInput(key, x, y);
+    glutPostRedisplay();
+}
+void clearLevelUpMessage(int value) {
+    myGame.levelUpMsg = false;
+    glutPostRedisplay();
 }
 void display(void)
 {
@@ -653,6 +810,17 @@ void display(void)
     if( myGame.gameOver) {
         renderBitmapString(320.0f, 450.0f, GLUT_BITMAP_HELVETICA_18, "GAME OVER");
     }
+
+    // Display current level
+    string levelText = "Level: " + to_string(myGame.level);
+    renderBitmapString(365.0f, 450.0f, GLUT_BITMAP_HELVETICA_18, levelText);
+
+    // Display LEVEL UP message if level increased
+    if (myGame.levelUpMsg) {
+        renderBitmapString(365.0f, 500.0f, GLUT_BITMAP_HELVETICA_18, "LEVEL UP!");
+        glutTimerFunc(5000,clearLevelUpMessage,0);
+    }
+
     Color lightBlue(59.0f / 255.0f, 85.0f / 255.0f, 162.0f / 255.0f, 1.0f);
     DrawRectangleRounded(320.0f, 55.0f, 170.0f, 60.0f, 0.3f, 6, lightBlue ); // lightBlue color
 
@@ -664,8 +832,8 @@ void display(void)
     }
 
     // Calculate the position for centering
-    float x = 320 + (170 - width) / 2.0f; // Adjust based on your rectangle size
-    float y = 90;                             // Fixed y-position
+    float x = 320 + (170 - width) / 2.0f;
+    float y = 90;
 
     // Draw text
     float textColor[3] = {1.0f, 1.0f, 1.0f}; // White color
@@ -677,44 +845,18 @@ void display(void)
     glutSwapBuffers();
     return ;
 }
-void handleInput(unsigned char key, int x, int y) {
-    myGame.handleInput(key, x, y);
-    glutPostRedisplay(); // Request display update
-}
-void handleSpecialInput(int key, int x, int y) {
-    myGame.handleSpecialInput(key, x, y);
-    glutPostRedisplay();
-}
-void update(int value) {
-
-    myGame.moveBlockDown(); // Move the current block down
-    glutPostRedisplay(); // Redraw the scene
-    glutTimerFunc(500, update, 0); // Call update again after 500 milliseconds (0.5 seconds)
-}
-void myInit (void)
-{
-    glClear(GL_COLOR_BUFFER_BIT);
-	glClearColor(0.172f, 0.172f, 0.498f, 1.0f);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0.0, 500.0, 620.0, 0.0);
-	glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-	return ;
-}
 int main(int argc, char ** argv)
 {
 	glutInit( & argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE| GLUT_RGB);
 	glutInitWindowSize(500, 620);
 	glutInitWindowPosition(500, 100);
-	glutCreateWindow("Tetris Game by Ruhul Amin Sharif");
+    glutCreateWindow("Tetris Game");
 	myInit ();
 	glutDisplayFunc(display);
 	glutKeyboardFunc(handleInput);
 	glutSpecialFunc(handleSpecialInput);
-	// Start the timer function
-    glutTimerFunc(500, update, 0);
+    glutTimerFunc(myGame.timerInterval, update, 0);
     glutMainLoop();
     return 0;
 }
