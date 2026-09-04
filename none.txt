@@ -1,0 +1,1 @@
+g++ main.cpp -o Tetris_Game -lglut -lGLU -lGL && ./Tetris_Game
