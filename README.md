@@ -557,10 +557,6 @@ The project demonstrates practical implementation of several computer graphics a
 - User input handling
 - Algorithmic row manipulation
 
-## 📄 License
-
-This project can be distributed under the license specified by the repository owner.
-
 ## 👨‍💻 Author
 
 **Ruhul Amin Sharif**
