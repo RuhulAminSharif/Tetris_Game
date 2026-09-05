@@ -811,8 +811,12 @@ public:
             }
             dropDistance++;
         }
-        updateScore(0, dropDistance * 2); // 2 points per block dropped
         lockBlock();
+        if (!gameOver)
+        {
+
+            updateScore(0, dropDistance * 2); // 2 points per block dropped
+        }
     }
 
     // Hold piece functionality
@@ -856,7 +860,10 @@ public:
                 break;
             case 'd': // 'd' for down
                 moveBlockDown();
-                updateScore(0, 1);
+                if (!gameOver)
+                {
+                    updateScore(0, 1);
+                }
                 break;
             case 'w': // 'w' for rotate
                 rotateBlock();
